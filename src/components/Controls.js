@@ -5,22 +5,15 @@ import PropTypes from 'prop-types';
 import {
   CameraVideoFill,
   CameraVideoOffFill,
-  ChatSquareTextFill,
-  Escape,
   MicFill,
   MicMuteFill,
-  Share,
   SkipEndFill,
-  ThreeDotsVertical,
   VolumeMuteFill,
   VolumeUpFill,
-  X,
 } from 'react-bootstrap-icons';
 import ReactTooltip from 'react-tooltip';
 import {
   stopSpeaking,
-  setShowTranscript,
-  disconnect,
   setOutputMute,
   setMicOn,
   setCameraOn,
@@ -28,7 +21,7 @@ import {
 import mic from '../img/mic.svg';
 import micFill from '../img/mic-fill.svg';
 import breakpoints from '../utils/breakpoints';
-import { primaryAccent } from '../globalStyle';
+import { seconderyAccent } from '../globalStyle';
 import FeedbackModal from './FeedbackModal';
 
 const volumeMeterHeight = 24;
@@ -44,110 +37,23 @@ function Controls({
     cameraOn,
     isOutputMuted,
     speechState,
-    showTranscript,
-    transcript,
     requestedMediaPerms,
     highlightMic,
     highlightMute,
-    highlightChat,
     highlightCamera,
     highlightSkip,
-    highlightMenu,
   } = useSelector((state) => ({ ...state.sm }));
 
   const dispatch = useDispatch();
 
   const [showFeedback, setShowFeedback] = useState(false);
-
-  // mic level visualizer
-  // TODO: fix this
-  // const typingOnly = requestedMediaPerms.mic !== true;
-  // const [volume, setVolume] = useState(0);
-  // useEffect(async () => {
-  //   if (connected && typingOnly === false) {
-  //     // credit: https://stackoverflow.com/a/64650826
-  //     let volumeCallback = null;
-  //     let audioStream;
-  //     let audioContext;
-  //     let audioSource;
-  //     let unmounted = false;
-  //     // Initialize
-  //     try {
-  //       audioStream = mediaStreamProxy.getUserMediaStream();
-  //       audioContext = new AudioContext();
-  //       audioSource = audioContext.createMediaStreamSource(audioStream);
-  //       const analyser = audioContext.createAnalyser();
-  //       analyser.fftSize = 512;
-  //       analyser.minDecibels = -127;
-  //       analyser.maxDecibels = 0;
-  //       analyser.smoothingTimeConstant = 0.4;
-  //       audioSource.connect(analyser);
-  //       const volumes = new Uint8Array(analyser.frequencyBinCount);
-  //       volumeCallback = () => {
-  //         analyser.getByteFrequencyData(volumes);
-  //         let volumeSum = 0;
-  //         volumes.forEach((v) => { volumeSum += v; });
-  //         // multiply value by 2 so the volume meter appears more responsive
-  //         // (otherwise the fill doesn't always show)
-  //         const averageVolume = (volumeSum / volumes.length) * 2;
-  //         // Value range: 127 = analyser.maxDecibels - analyser.minDecibels;
-  //         setVolume(averageVolume > 127 ? 127 : averageVolume);
-  //       };
-  //       // runs every time the window paints
-  //       const volumeDisplay = () => {
-  //         window.requestAnimationFrame(() => {
-  //           if (!unmounted) {
-  //             volumeCallback();
-  //             volumeDisplay();
-  //           }
-  //         });
-  //       };
-  //       volumeDisplay();
-  //     } catch (e) {
-  //       console.error('Failed to initialize volume visualizer!', e);
-  //     }
-
-  //     return () => {
-  //       console.log('closing down the audio stuff');
-  //       // FIXME: tracking #79
-  //       unmounted = true;
-  //       audioContext.close();
-  //       audioSource.close();
-  //     };
-  //   } return false;
-  // }, [connected]);
-
-  // bind transcrpt open and mute func to each other, so that
-  // when we open the transcript we mute the mic
-  const toggleKeyboardInput = () => {
-    dispatch(setShowTranscript(!showTranscript));
-    dispatch(setMicOn({ micOn: showTranscript }));
-  };
+  const [initial, setInitial] = useState(false);
 
   useEffect(() => {
     ReactTooltip.rebuild();
   });
 
-  const iconSize = 24;
-
-  const [showContextMenu, setShowContextMenu] = useState(false);
-
-  const originalShareCopy = 'Copiar link';
-  const [shareCopy, setShareCopy] = useState(originalShareCopy);
-
-  const shareDP = async () => {
-    const url = window.location;
-    try {
-      await navigator.share({ url });
-    } catch {
-      const type = 'text/plain';
-      const blob = new Blob([url], { type });
-      const data = [new window.ClipboardItem({ [type]: blob })];
-      navigator.clipboard.write(data);
-      setShareCopy('Link copied!');
-      setTimeout(() => setShareCopy(originalShareCopy), 3000);
-    }
-  };
+  const MenuiconSize = 35;
 
   return (
     <div className={className}>
@@ -167,137 +73,123 @@ function Controls({
           </div>
         </div>
       ) : null}
-      <div className="d-flex">
-        <div>
-          {/* mute dp sound */}
+      <div className="d-flex espace">
+
+        {!initial ? (
           <button
             type="button"
-            className="control-icon"
-            aria-label="Alternar áudio"
-            data-tip="Alternar áudio"
-            onClick={() => dispatch(setOutputMute({ isOutputMuted: !isOutputMuted }))}
-          >
-            {isOutputMuted ? (
-              <VolumeMuteFill size={iconSize} style={{ border: highlightMute ? 'red 2px solid' : '' }} />
-            ) : (
-              <VolumeUpFill size={iconSize} color={primaryAccent} style={{ border: highlightMute ? 'red 2px solid' : '' }} />
-            )}
-          </button>
-        </div>
-        <div>
-          {/* skip through whatever dp is currently speaking */}
-          <button
-            type="button"
-            className="control-icon"
-            disabled={speechState !== 'speaking'}
-            onClick={() => dispatch(stopSpeaking())}
-            data-tip="Pular fala"
-            aria-label="Pular fala"
-          >
-            <SkipEndFill size={iconSize} style={{ border: highlightSkip ? 'red 2px solid' : '' }} />
-          </button>
-        </div>
-        <div>
-          {/* show transcript */}
-          <button
-            type="button"
-            className="control-icon"
-            aria-label="Alternar Transcrição"
-            data-tip="Alternar Transcrição"
-            onClick={toggleKeyboardInput}
-            disabled={transcript.length <= 0}
-          >
-            <ChatSquareTextFill
-              size={iconSize}
-              color={showTranscript ? primaryAccent : '#B3B3B3'}
-              style={{ border: highlightChat ? 'red 2px solid' : '' }}
-            />
-          </button>
-        </div>
-        <div>
-          {/* toggle user mic */}
-          <button
-            type="button"
-            className="control-icon"
+            className="control-icon icon iniciar"
             aria-label="Alternar Microfone"
             data-tip="Alternar Microfone"
-            disabled={requestedMediaPerms.micDenied === true}
-            onClick={() => dispatch(setMicOn({ micOn: !micOn }))}
+            onClick={() => {
+              dispatch(setMicOn({ micOn: !micOn }));
+              dispatch(setCameraOn({ cameraOn: !cameraOn }));
+              setInitial(true);
+            }}
           >
-            {micOn ? (
-              <MicFill size={iconSize} color={primaryAccent} style={{ border: highlightMic ? 'red 2px solid' : '' }} />
-            ) : (
-              <MicMuteFill size={iconSize} style={{ border: highlightMic ? 'red 2px solid' : '' }} />
-            )}
+            <span>Iniciar</span>
           </button>
-        </div>
-        <div>
-          {/* toggle user camera */}
-          <button
-            type="button"
-            className="control-icon"
-            aria-label="Alternar Câmera"
-            data-tip="Alternar Câmera"
-            disabled={requestedMediaPerms.cameraDenied === true}
-            onClick={() => dispatch(setCameraOn({ cameraOn: !cameraOn }))}
-          >
-            {cameraOn ? (
-              <CameraVideoFill
-                size={iconSize}
-                color={primaryAccent}
-                style={{ border: highlightCamera ? 'red 2px solid' : '' }}
-              />
-            ) : (
-              <CameraVideoOffFill size={iconSize} style={{ border: highlightCamera ? 'red 2px solid' : '' }} />
-            )}
-          </button>
-        </div>
-        <div className="context-control-parent">
-          <button
-            className="control-icon context-controls-trigger"
-            type="button"
-            aria-label="Mais opções"
-            data-tip="Mais opções"
-            id="dpChatDropdown"
-            onClick={() => setShowContextMenu(!showContextMenu)}
-          >
-            {showContextMenu ? (
-              <X size={iconSize} color="#fff" />
-            ) : (
-              <ThreeDotsVertical size={iconSize} style={{ border: highlightMenu ? 'red 2px solid' : '' }} />
-            )}
-          </button>
-          {showContextMenu ? (
-            <div className="context-controls shadow">
-              <div className="d-flex justify-content-end align-items-start">
-                <ul>
-                  <li>
+        )
+          : (
+            <>
+              <div>
+                {/* alternar microfone do usuário */}
+                {micOn ? (
+                  <button
+                    type="button"
+                    className="control-icon icon"
+                    aria-label="Alternar Microfone"
+                    data-tip="Alternar Microfone"
+                    disabled={requestedMediaPerms.micDenied === true}
+                    onClick={() => dispatch(setMicOn({ micOn: !micOn }))}
+                  >
+                    <MicFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightMic ? 'red 2px solid' : '' }} />
+                  </button>
+                )
+                  : (
                     <button
-                      className="btn-unstyled "
                       type="button"
-                      onClick={() => dispatch(disconnect())}
+                      className="control-icon iconMute"
+                      aria-label="Alternar Microfone"
+                      data-tip="Alternar Microfone"
+                      disabled={requestedMediaPerms.micDenied === true}
+                      onClick={() => dispatch(setMicOn({ micOn: !micOn }))}
                     >
-                      <Escape size={18} />
-                      {' '}
-                      Encerrar sessão
+                      <MicMuteFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightMic ? 'red 2px solid' : '' }} />
                     </button>
-                  </li>
-                  <li>
-                    <button
-                      className="btn-unstyled"
-                      type="button"
-                      onClick={() => shareDP()}
-                    >
-                      <Share size={18} />
-                      {' '}
-                      {shareCopy}
-                    </button>
-                  </li>
-                </ul>
+                  )}
               </div>
-            </div>
-          ) : null}
-        </div>
+
+              <div>
+                {/* alternar câmera do usuário */}
+                {cameraOn ? (
+                  <button
+                    type="button"
+                    className="control-icon icon"
+                    aria-label="Alternar Câmera"
+                    data-tip="Alternar Câmera"
+                    disabled={requestedMediaPerms.cameraDenied === true}
+                    onClick={() => dispatch(setCameraOn({ cameraOn: !cameraOn }))}
+                  >
+                    <CameraVideoFill size={MenuiconSize} color={seconderyAccent} style={{ border: highlightCamera ? 'red 2px solid' : '' }} className="size" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="control-icon iconMute"
+                    aria-label="Alternar Câmera"
+                    data-tip="Alternar Câmera"
+                    disabled={requestedMediaPerms.cameraDenied === true}
+                    onClick={() => dispatch(setCameraOn({ cameraOn: !cameraOn }))}
+                  >
+                    <CameraVideoOffFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightCamera ? 'red 2px solid' : '' }} />
+
+                  </button>
+                )}
+              </div>
+
+              <div>
+                {/* pule o que quer que o dp esteja falando no momento */}
+                {speechState === 'speaking' ? (
+                  <button
+                    type="button"
+                    className="control-icon icon"
+                    onClick={() => dispatch(stopSpeaking())}
+                    data-tip="Pular fala"
+                    aria-label="Pular fala"
+                  >
+                    <SkipEndFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightSkip ? 'red 2px solid' : '' }} />
+                  </button>
+                ) : null}
+
+              </div>
+
+              <div>
+                {/* silenciar som dp */}
+                {isOutputMuted ? (
+                  <button
+                    type="button"
+                    className="control-icon iconMute"
+                    aria-label="Alternar áudio"
+                    data-tip="Alternar áudio"
+                    onClick={() => dispatch(setOutputMute({ isOutputMuted: !isOutputMuted }))}
+                  >
+                    <VolumeMuteFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightMute ? 'red 2px solid' : '' }} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="control-icon icon"
+                    aria-label="Alternar áudio"
+                    data-tip="Alternar áudio"
+                    onClick={() => dispatch(setOutputMute({ isOutputMuted: !isOutputMuted }))}
+                  >
+                    <VolumeUpFill size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightMute ? 'red 2px solid' : '' }} />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
       </div>
     </div>
   );
@@ -342,17 +234,20 @@ export default styled(Controls)`
       }
     }
   }
+
   .context-controls-trigger {
     position: relative;
     border: 1px solid red;
     z-index: 105;
   }
+
   .control-icon {
     border: none;
     background: none;
 
     padding: .4rem;
   }
+
   .form-control {
     opacity: 0.8;
     &:focus {
@@ -364,6 +259,7 @@ export default styled(Controls)`
     opacity: 1;
     transition: opacity 0.1s;
   }
+
   .interrupt-active {
     opacity: 0;
   }
@@ -394,21 +290,66 @@ export default styled(Controls)`
       z-index: 20;
     }
   }
+
   .alert-modal {
     position: absolute;
     z-index: 1000;
     display: flex;
-    top: 0;
+    bottom: 0;
     left: 0;
     justify-content: center;
     align-items: center;
     width: 100vw;
-    min-height: 100vh;
+    min-height: 100vh; /* Leva em consideração a altura do cabeçalho e do rodapé */
     background: rgba(0,0,0,0.3);
   }
   .alert-modal-card {
     background: #FFF;
-    padding: 1.3rem;
+    padding-bottom: 2.5rem; /* altura do rodapé */
     border-radius: 5px;
+  }
+
+  .icon{
+    background-color: #8bc53f;
+    color: #fff;
+    border-radius: 40px;
+    margin-right: 10px;
+    height: 70px;
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      background-color: #628c2a;
+    }
+    @media (max-width: 500px){
+      height: 60px;
+      width: 60px;
+    }
+  }
+
+  .iconMute{
+    background-color: #f2695c;
+    border-radius: 40px;
+    margin-right: 10px;
+    height: 70px;
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      background-color: #bc493e;
+    }
+    @media (max-width: 500px){
+      height: 60px;
+      width: 60px;
+    }
+  }
+
+  .size{
+    @media (max-width: 500px){
+      width: 20px !important;
+      height: 20px !important;
+    }
   }
 `;

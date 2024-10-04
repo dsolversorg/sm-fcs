@@ -90,8 +90,8 @@ PersonaVideo.propTypes = {
 };
 
 export default styled(PersonaVideo)`
-  /* if you need the persona video to be different than the window dimensions, change these values */
   width: 100vw;
+  height: 100vh;
 
   position: fixed;
   z-index: 0;
@@ -100,9 +100,14 @@ export default styled(PersonaVideo)`
   align-items: center;
   justify-content: center;
   margin-top: ${transparentHeader ? '' : headerHeight};
+
   .persona-video {
-    /* the video element will conform to the container dimensions, so keep this as it is */
     width: 100%;
     height: 100%;
-  }
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: cover;
+    position: fixed;
+    top: 0;
+  }    
 `;

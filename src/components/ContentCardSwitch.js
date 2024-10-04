@@ -51,7 +51,7 @@ function ContentCardSwitch({
 
   if ('type' in card === false) {
     return returnCardError(
-      'payload missing type key! component key has been depreciated.',
+      'payload missing type key! component key has been depreciated',
     );
   }
   if (card === undefined) {

@@ -19,13 +19,13 @@ function TextInput({ className }) {
 
   return (
     <div className={className}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="formCont">
         <div className="input-group">
           <input
             value={textInput}
             onChange={handleInput}
             className="form-control"
-            placeholder="Type your message here ..."
+            placeholder="Digite sua mensagem aqui...."
           />
           <button
             className="btn send-button"
@@ -55,5 +55,27 @@ export default styled(TextInput)`
     border-left: none;
     background: #FFF;
     color: rgba(0,0,0,0.4);
+  }
+
+  .input-group {
+    width: 40%;
+
+    @media (max-width: 700px){
+      width: 90%;
+    }
+  }
+
+  .formCont {
+    display: flex;
+    justify-content: flex-end;
+    width: 98%;
+
+     @media (max-width: 700px){
+      display: flex;
+      -webkit-box-pack: end;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
   }
 `;

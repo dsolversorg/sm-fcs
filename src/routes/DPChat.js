@@ -1,13 +1,17 @@
 import React, { createRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
+import {
+  ChatSquareTextFill,
+  X,
+} from 'react-bootstrap-icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import PersonaVideo from '../components/PersonaVideo';
 import Captions from '../components/Captions';
 import ContentCardDisplay from '../components/ContentCardDisplay';
 import {
-  disconnect, setVideoDimensions,
+  disconnect, setVideoDimensions, setShowTranscript, setMicOn,
 } from '../store/sm/index';
 import Header from '../components/Header';
 import {
@@ -15,6 +19,8 @@ import {
 } from '../config';
 import TextInput from '../components/TextInput';
 import STTFeedback from '../components/STTFeedback';
+import Controls from '../components/Controls';
+import { seconderyAccent } from '../globalStyle';
 
 function DPChat({
   className,
@@ -24,14 +30,22 @@ function DPChat({
     loading,
     disconnected,
     error,
-    showTranscript,
-    micOn,
     isOutputMuted,
+    showTranscript,
+    highlightChat,
   } = useSelector(({ sm }) => ({ ...sm }));
+  const { pathname } = useLocation();
 
   const dispatch = useDispatch();
 
   const history = useHistory();
+
+  const MenuiconSize = 35;
+
+  const toggleKeyboardInput = () => {
+    dispatch(setShowTranscript(!showTranscript));
+    dispatch(setMicOn({ micOn: showTranscript }));
+  };
 
   if (disconnected === true) {
     if (disconnectPage) {
@@ -88,36 +102,27 @@ function DPChat({
         {/* top row */}
         <div className="row">
           <Header />
-          {/* {
-            // consumers of the template can uncomment this block if they want a camera preview
-            // will need to add cameraOn to the values they get from the state
-              cameraOn
-                ? (
-                  <div className="row d-flex justify-content-end">
-                    <div className="col-auto">
-                      <div className="camera-preview">
-                        <CameraPreview />
-                      </div>
-                    </div>
-                  </div>
-                )
-                : <div />
-            } */}
         </div>
         {/* middle row */}
         <div
-          className="row d-flex justify-content-end align-items-center flex-grow-1 ps-3 pe-3"
-          style={{ overflow: 'scroll' }}
+          className="contChat row d-flex justify-content-end align-items-center flex-grow-1 ps-3 pe-3"
           ref={ccDisplaRef}
         >
           <div className="col col-md-5 d-flex align-items-end align-items-md-center" style={{ height: `${ccDisplayHeight}px` || 'auto' }}>
-            <div>
+            <div className="chat">
               <ContentCardDisplay />
             </div>
           </div>
         </div>
-        {/* bottom row */}
         <div>
+          {showTranscript ? (
+            <div>
+              <TextInput />
+            </div>
+          ) : null}
+        </div>
+        {/* bottom row */}
+        <div className="contBottom">
           {isOutputMuted ? (
             <div className="row">
               <div className="col text-center">
@@ -126,17 +131,52 @@ function DPChat({
             </div>
           ) : null}
           <div className="row">
-            <div className="d-flex justify-content-center m-2">
+            <div className="d-flex justify-content-center m-2 legend">
               <STTFeedback />
             </div>
           </div>
-          {showTranscript === true || micOn === false ? (
-            <div className="row justify-content-center">
-              <div className="col-md-8 col-lg-5 p-3">
-                <TextInput />
+          <div className="justify-content-between align-items-center contWid">
+            <div className="d-flex justify-content-center aling-itens-center">
+              <div className={`contControl ${connected && !loading && pathname === '/video' ? '' : 'd-none'}`}>
+                <Controls />
               </div>
             </div>
-          ) : null}
+            <div>
+              {/* aling center */}
+            </div>
+            <div className="endCont">
+              {/* aling end */}
+              <div>
+                {/* mostrar transcrição */}
+                {!showTranscript ? (
+                  <button
+                    type="button"
+                    className="control-icon icon"
+                    aria-label="Alternar Transcrição"
+                    data-tip="Alternar Transcrição"
+                    onClick={toggleKeyboardInput}
+                  >
+                    <ChatSquareTextFill
+                      size={MenuiconSize}
+                      color={seconderyAccent}
+                      className="size"
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="control-icon iconMute"
+                    aria-label="Alternar Transcrição"
+                    data-tip="Alternar Transcrição"
+                    onClick={toggleKeyboardInput}
+                  >
+                    <X size={MenuiconSize} className="size" color={seconderyAccent} style={{ border: highlightChat ? 'red 2px solid' : '' }} />
+                  </button>
+                )}
+
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       {connected ? <PersonaVideo /> : null}
@@ -148,22 +188,41 @@ DPChat.propTypes = {
   className: PropTypes.string.isRequired,
 };
 
+const getBottomValue = () => {
+  if (/Android/i.test(navigator.userAgent)) {
+    return '30px';
+  }
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    return '100px';
+  }
+  return '25px';
+};
+
 export default styled(DPChat)`
+  .fw-bol { font-size: 24px!important;}
   height: 100vh;
+
+  .endCont .row>* {
+    width: 0;
+  }
 
   .video-overlay {
     overflow: hidden;
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     left: 0;
-
     z-index: 10;
-
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+
+  .endCont{
+    width: 90px;
+    display: flex;
+    justify-content: center;
   }
 
   .vertical-fit-container {
@@ -173,6 +232,103 @@ export default styled(DPChat)`
     scrollbar-width: none; /* Firefox 64 */
     &::-webkit-scrollbar {
       display: none;
+    }
+  }
+
+  .legend{
+    @media (max-width: 500px){
+      align-items: center;
+      word-break: break-word;
+    }
+  }
+
+  .contChat{
+    overflow-y: scroll;
+    @media (max-width: 500px){
+      word-break: break-word;
+    }
+  }
+
+  .fw-bol {
+    font-size: 32px;
+  }
+  .row{
+    overflow-x: hiden;
+    overflow-y: hiden;
+    --bs-gutter-y: 0.2rem;
+  }
+
+  .contControl{
+    width: 100%;
+  }
+
+  .contBottom{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+    @media (max-width: 500px){
+      bottom: ${getBottomValue()};
+    }
+  }
+  
+  .contWid{
+    display: flex;
+    width: 90%;
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+
+  .control-icon {
+    border: none;
+    background: none;
+
+    padding: .4rem;
+  }
+
+  .iconMute{
+    background-color: #f2695c;
+    border-radius: 40px;
+    height: 70px;
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      background-color: #bc493e;
+    }
+    @media (max-width: 500px){
+      height: 60px;
+      width: 60px;
+    }
+  }
+    
+  .icon{
+    background-color: #8bc53f;
+    border-radius: 40px;
+    height: 70px;
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      background-color: #628c2a;
+    }
+    @media (max-width: 500px){
+      height: 60px;
+      width: 60px;
+    }
+  }
+
+  .chat{
+    width: 100%;
+  }
+
+  .size{
+    @media (max-width: 500px){
+      width: 20px !important;
+      height: 20px !important;
     }
   }
 `;

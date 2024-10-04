@@ -7,12 +7,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import breakpoints from '../utils/breakpoints';
 import Header from '../components/Header';
 import { landingBackgroundImage, landingBackgroundColor } from '../config';
-import { setRequestedMediaPerms, createScene } from '../store/sm';
+import { createScene } from '../store/sm';
 import micFill from '../img/mic-fill.svg';
 import videoFill from '../img/camera-video-fill.svg';
 
 function Landing({ className }) {
-  const { mic, camera } = useSelector(({ sm }) => sm.requestedMediaPerms);
   const dispatch = useDispatch();
 
   const {
@@ -49,7 +48,7 @@ function Landing({ className }) {
             <div className="col-12 col-lg-6">
               <div className="row" style={{ marginBottom: '9px' }}>
                 <div>
-                  <h1 className="fw-bol">Sou uma Pessoa Digital Hiper-realista, criada pela Digital Solvers com o propósito de trazer vida para a Inteligência Artificial Generativa.</h1>
+                  <h1 className="fw-bol">Sou uma Pessoa Digital Hiper-realista, criada pela Digital Solvers, com o propósito de esclarecer suas dúvidas.</h1>
                 </div>
               </div>
               <div className="row">
@@ -62,64 +61,18 @@ function Landing({ className }) {
                   </h4>
                 </div>
               </div>
-              <div className="row" style={{ marginBottom: '36px' }}>
-                <div>
-                  <div className="form-check form-switch">
-                    <label
-                      className="form-check-label d-flex align-items-center"
-                      htmlFor="micPermSwitch"
-                    >
-                      <input
-                        className={`shadow form-check-input mic-switch switch ${
-                          mic ? 'status-checked' : 'status-unchecked'
-                        }`}
-                        type="checkbox"
-                        role="switch"
-                        id="micPermSwitch"
-                        onChange={() => dispatch(setRequestedMediaPerms({ mic: !mic }))}
-                        checked={mic}
-                      />
-                      <div className="d-block ms-2">
-                        Use seu microfone para que eu possa te ouvir.
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="row" style={{ marginBottom: '52px' }}>
-                <div>
-                  <div className="form-check form-switch">
-                    <label
-                      className="form-check-label d-flex align-items-center"
-                      htmlFor="cameraPermSwitch"
-                    >
-                      <input
-                        className={`shadow form-check-input video-switch switch ${
-                          camera ? 'status-checked' : 'status-unchecked'
-                        }`}
-                        type="checkbox"
-                        role="switch"
-                        id="micPermSwitch"
-                        onChange={() => dispatch(setRequestedMediaPerms({ camera: !camera }))}
-                        checked={camera}
-                      />
-                      <div className="d-block ms-2">
-                        Deixe sua câmera ligada, pois reajo as suas expressões.
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
               <div className="row" style={{ marginBottom: '60px' }}>
                 {!connected && (
                   <div
                     className="button-start button--disabled m-2 "
                     type="button"
                   >
+                    <span>
+                      Aguarde...
+                    </span>
                     <img alt="gif loading" src="https://media.tenor.com/t5DMW5PI8mgAAAAj/loading-green-loading.gif" className="gif-loading" />
                   </div>
                 )}
-
                 {connected && (
                   <button
                     className={`${connected ? 'button-start' : 'button-start button-start--disabled'} m-2`}
@@ -152,6 +105,9 @@ Landing.propTypes = {
 };
 
 export default styled(Landing)`
+  .fw-bol { font-size: 24px!important;}
+
+  .fw-light{ font-size: 16px; }
 
   .gif-loading {
     width: 25px;
@@ -182,7 +138,7 @@ export default styled(Landing)`
     border: 1px solid rgb(60, 60, 60);
     border-radius: 32px;
     padding:16px 32px;
-    background-color: #8AC43F;
+    background-color: #51df2d;
     color: #ffffff;
     font-weight: 600;
     margin: 0;
@@ -198,6 +154,10 @@ export default styled(Landing)`
     margin: 0;
     text-align: center;
     cursor: not-allowed;
+
+    &>span{
+      margin-right: 10px;
+    }
   }
 
   .button-start--disabled {

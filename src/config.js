@@ -5,7 +5,7 @@ import placeholder from './img/placeholder-headshot.png';
 export const transparentHeader = true;
 export const headerHeight = '4.2rem';
 export const logo = 'https://i.postimg.cc/9MPfNrPQ/astrazeneca-logo-png-1280-1280x512-1-700x280.png';
-export const logoAltText = 'astraZeneca Icon';
+export const logoAltText = 'AZ Icon';
 export const logoLink = '/';
 
 // background image is positioned in a way that is best for pictures of the persona's face.
